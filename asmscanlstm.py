@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from Bio import SeqIO
-from .config import Config
+from config import Config
 
 class ASMscanLSTM:
     
