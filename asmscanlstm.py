@@ -11,16 +11,16 @@ class ASMscanLSTM:
     TOKENIZER_PATH = os.path.join(os.path.dirname(__file__), "tokenizer.pickle")
     MODELS_PATH = os.path.join(os.path.dirname(__file__), "models")
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.tokenizer = self._load_tokenizer()
         self.models = self._load_models()
         self.config = Config()
 
-    def predict(self, seq: str) -> tuple[float, str]:
+    def predict(self, seq):
         seq_pred, frag = self._predict([seq])
         return seq_pred[0], frag[0]
 
-    def predict_fasta(self, fasta_path: str, output_path: str, sep: str = "\t") -> None:
+    def predict_fasta(self, fasta_path, output_path, sep = "\t"):
         seqs, seqs_ids = self._load_fasta(fasta_path)
         seqs_pred, frags = self._predict(seqs)
         csv = {
@@ -31,7 +31,7 @@ class ASMscanLSTM:
         df = pd.DataFrame(csv)
         df.to_csv(output_path, sep=sep, index=False)
 
-    def _predict(self, seqs: list[str]) -> tuple[list[str], list[str]]:
+    def _predict(self, seqs):
         T = self.config.getParam("T")
         seqs_frags, seqs_scopes = self._frag_seqs(seqs, T)
         tokens = self.tokenizer.texts_to_sequences(seqs_frags)
@@ -45,7 +45,7 @@ class ASMscanLSTM:
 
         return self._frags_to_seqs_pred(seqs_frags, seqs_scopes, frags_pred)
 
-    def _frags_to_seqs_pred(self, seqs_frags: list[str], seqs_scopes: list[int], frags_pred: list[float]) -> tuple[np.ndarray[float], np.ndarray[str]]:
+    def _frags_to_seqs_pred(self, seqs_frags, seqs_scopes, frags_pred):
         pred = []
         frags = []
 
@@ -59,7 +59,7 @@ class ASMscanLSTM:
 
         return np.array(pred), np.array(frags)
 
-    def _frag_seqs(self, seqs: list[str], T: int) -> tuple[list[str], list[int]]:
+    def _frag_seqs(self, seqs, T):
         seqs_frags = []
         seqs_scopes = []
 
@@ -79,17 +79,17 @@ class ASMscanLSTM:
 
         return seqs_frags, seqs_scopes
 
-    def _load_tokenizer(self) -> tf.keras.preprocessing.text.Tokenizer:
+    def _load_tokenizer(self):
         with open(ASMscanLSTM.TOKENIZER_PATH, "rb") as handle:
             return pickle.load(handle)
 
-    def _load_models(self) -> list[tf.keras.models.Model]:
+    def _load_models(self):
         models = []
         for model_dir in os.listdir(ASMscanLSTM.MODELS_PATH):
             models.append(tf.keras.models.load_model(os.path.join(ASMscanLSTM.MODELS_PATH, model_dir)))
         return models
 
-    def _load_fasta(self, fasta_file_path: str) -> tuple[np.ndarray[str], list[str]]:
+    def _load_fasta(self, fasta_file_path):
         seqs_ids = []
         seqs = []
         
