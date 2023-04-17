@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import uuid
 
 from flask_cors import CORS
+from asmscanlstm import ASMscanLSTM
 
 import numpy as np
 import pickle
