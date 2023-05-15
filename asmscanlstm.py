@@ -21,28 +21,14 @@ class ASMscanLSTM:
         logging.warn(self.config)
 
     def predict(self, seq):
-        print(seq)
-        seq_pred, frag = self._predict([seq])
-        return seq_pred[0], frag[0]
-
-    def predict_fasta(self, fasta_path, output_path, sep = "\t"):
-        seqs, seqs_ids = self._load_fasta(fasta_path)
-        seqs_pred, frags = self._predict(seqs)
-        csv = {
-            "id": seqs_ids,
-            "prob": seqs_pred,
-            "frag": frags
-        }
-        df = pd.DataFrame(csv)
-        df.to_csv(output_path, sep=sep, index=False)
+        seq_pred = self._predict([seq])
+        return seq_pred
 
     def _predict(self, seqs):
         T = self.config.getParam("T")
         seqs_frags, seqs_scopes = self._frag_seqs(seqs, T)
         tokens = self.tokenizer.texts_to_sequences(seqs_frags)
         data = tf.keras.preprocessing.sequence.pad_sequences(tokens, T)
-
-        logging.warn(data)
 
         # CombModel
         models_preds = []
@@ -51,7 +37,15 @@ class ASMscanLSTM:
             logging.warn(models_preds)
         frags_pred = np.mean(models_preds, axis=0)
 
-        return self._frags_to_seqs_pred(seqs_frags, seqs_scopes, frags_pred)
+        # Convert predictions to the desired JSON format
+        results = []
+        for i in range(len(seqs_frags)):
+            results.append({
+                "startIndex": i,
+                "endIndex": i + T - 1,
+                "prediction": str(frags_pred[i])
+            })
+        return results
 
     def _frags_to_seqs_pred(self, seqs_frags, seqs_scopes, frags_pred):
         pred = []
@@ -94,18 +88,6 @@ class ASMscanLSTM:
     def _load_models(self):
         models = []
         for model_dir in os.listdir(ASMscanLSTM.MODELS_PATH):
-            logging.warn(model_dir)
-            logging.warn("sp" + os.path.join(ASMscanLSTM.MODELS_PATH, model_dir))
             models.append(tf.keras.models.load_model(os.path.join(ASMscanLSTM.MODELS_PATH, model_dir)))
-            logging.warn(models)
         return models
 
-    def _load_fasta(self, fasta_file_path):
-        seqs_ids = []
-        seqs = []
-        
-        for record in SeqIO.parse(fasta_file_path, "fasta"):
-            seqs_ids.append(record.id)
-            seqs.append(str(record.seq))
-
-        return np.array(seqs), seqs_ids

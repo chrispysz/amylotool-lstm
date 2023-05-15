@@ -17,25 +17,23 @@ CORS(app)
 app.config['SECRET_KEY'] = 'raiDWVk68I5EGao2nMl8UVaHKVOTSlzJ'
 app.config['TIMEOUT'] = None
 
+lstm = ASMscanLSTM()
+
 @app.route('/predict/full', methods=['POST'])
 def predictFull():
 
-    lstm = ASMscanLSTM()
+    global lstm
+
     
     sequence = request.json['sequence']
-    print(sequence, flush=True)
     # Predict for given sequence 
-    prob, frag = lstm.predict(sequence)
-    logging.warn(sequence)
-    logging.warn(prob)
-    logging.warn(frag)
+    prob= lstm.predict(sequence)
 
     if (sequence == "ping"):
         return jsonify(results = "Service reached")
     else:
         return jsonify(
-            results=str(prob),
-            results2 = str(frag)
+            results=prob
         )
 
 if __name__ == '__main__':
