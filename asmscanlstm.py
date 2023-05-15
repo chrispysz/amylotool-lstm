@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import logging
 from Bio import SeqIO
 from config import Config
 
@@ -13,10 +14,14 @@ class ASMscanLSTM:
 
     def __init__(self):
         self.tokenizer = self._load_tokenizer()
+        logging.warn(self.tokenizer)
         self.models = self._load_models()
+        logging.warn(self.models)
         self.config = Config()
+        logging.warn(self.config)
 
     def predict(self, seq):
+        print(seq)
         seq_pred, frag = self._predict([seq])
         return seq_pred[0], frag[0]
 
@@ -37,10 +42,13 @@ class ASMscanLSTM:
         tokens = self.tokenizer.texts_to_sequences(seqs_frags)
         data = tf.keras.preprocessing.sequence.pad_sequences(tokens, T)
 
+        logging.warn(data)
+
         # CombModel
         models_preds = []
         for m in self.models:
             models_preds.append(m.predict(data, verbose=2).flatten())
+            logging.warn(models_preds)
         frags_pred = np.mean(models_preds, axis=0)
 
         return self._frags_to_seqs_pred(seqs_frags, seqs_scopes, frags_pred)
@@ -86,7 +94,10 @@ class ASMscanLSTM:
     def _load_models(self):
         models = []
         for model_dir in os.listdir(ASMscanLSTM.MODELS_PATH):
+            logging.warn(model_dir)
+            logging.warn("sp" + os.path.join(ASMscanLSTM.MODELS_PATH, model_dir))
             models.append(tf.keras.models.load_model(os.path.join(ASMscanLSTM.MODELS_PATH, model_dir)))
+            logging.warn(models)
         return models
 
     def _load_fasta(self, fasta_file_path):
