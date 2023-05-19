@@ -30,14 +30,12 @@ class ASMscanLSTM:
         tokens = self.tokenizer.texts_to_sequences(seqs_frags)
         data = tf.keras.preprocessing.sequence.pad_sequences(tokens, T)
 
-        # CombModel
         models_preds = []
         for m in self.models:
             models_preds.append(m.predict(data, verbose=2).flatten())
             logging.warn(models_preds)
         frags_pred = np.mean(models_preds, axis=0)
 
-        # Convert predictions to the desired JSON format
         results = []
         for i in range(len(seqs_frags)):
             results.append({

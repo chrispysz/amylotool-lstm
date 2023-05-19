@@ -15,26 +15,30 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = 'raiDWVk68I5EGao2nMl8UVaHKVOTSlzJ'
-app.config['TIMEOUT'] = None
 
-lstm = ASMscanLSTM()
 
 @app.route('/predict/full', methods=['POST'])
 def predictFull():
 
-    global lstm
+    logging.warn("predictFull")
 
-    
     sequence = request.json['sequence']
-    # Predict for given sequence 
-    prob= lstm.predict(sequence)
-
     if (sequence == "ping"):
         return jsonify(results = "Service reached")
-    else:
-        return jsonify(
-            results=prob
-        )
+
+    time_start = time.time()
+    lstm = ASMscanLSTM()
+    logging.warn("LSTM model loaded in: "+str(time.time() - time_start))
+
+    time_start = time.time()
+    prob= lstm.predict(sequence)
+    logging.warn("Prediction done in: "+str(time.time() - time_start))
+
+    
+
+    return jsonify(
+        results=prob
+    )
 
 if __name__ == '__main__':
-    app.run(debug = True)
+    app.run(debug = False)
